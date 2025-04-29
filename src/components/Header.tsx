@@ -21,7 +21,6 @@ import RichTextEditor from './RichTextEditor'
 
 
 function Header() {
-    const user = null;
   return (
     <header 
     className='relative flex h-24 w-full items-center justify-between bg-popover px-3 sm:px-8 min-w-[400px]' 
