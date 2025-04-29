@@ -8,7 +8,6 @@ import DarkModeToggle from './DarkModeToggle'
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
