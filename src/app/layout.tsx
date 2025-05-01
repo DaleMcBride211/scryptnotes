@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 
 
 export const metadata: Metadata = {
-  title: "Buck Notes",
+  title: "Scrypt Notes",
   description: "This is my note app that uses Next.js and AI.",
 };
 
