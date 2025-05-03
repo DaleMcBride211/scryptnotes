@@ -15,7 +15,13 @@ import {
 import { Input } from "@/components/ui/input";
 import RichTextEditor from './RichTextEditor';
 
+// const createNote = async () => {
+//   try {
 
+//   } catch(error) {
+//     console.error("Error loading Topics: ", error);
+//   }
+// }
 
 
 
@@ -23,10 +29,9 @@ import RichTextEditor from './RichTextEditor';
 function Header() {
   return (
     <header 
-    className='relative flex h-24 w-full items-center justify-between bg-popover px-3 sm:px-8 min-w-[400px]' 
+    className='absolute flex h-24 w-full items-center justify-between bg-popover px-2 z-1 sm:min-w-[400px]' 
     style={{
         boxShadow: shadow,
-
     }}>
         <Link href="/" className="flex items-end gap-2">
         <Image src="/Slogo.jpg" alt='' height={60} width={60} className="rounded-full" priority></Image>

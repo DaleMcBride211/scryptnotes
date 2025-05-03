@@ -4,7 +4,6 @@ import React from 'react';
 import MenuBar from './MenuBar';
 import TextAlign from '@tiptap/extension-text-align';
 import Highlight from "@tiptap/extension-highlight";
-import Placeholder from '@tiptap/extension-placeholder';
 
 export default function RichTextEditor() {
     const editor = useEditor({
