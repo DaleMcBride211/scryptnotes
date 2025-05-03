@@ -8,8 +8,6 @@ import {
 } from "@/components/ui/card";
 
 import { Button } from '@/components/ui/button'
-//testing deployment again
-
 // Define an interface for the structure of a single note
 interface Note {
   _id: string;       // Assuming _id is a string from MongoDB or similar
@@ -20,15 +18,14 @@ interface Note {
 // Define an interface for the expected API response structure
 interface ApiResponse {
     topics: Note[];
-    // Add other potential top-level properties from your API if they exist
 }
 
-// ... (getNotes function remains the same) ...
+
 const getNotes = async (): Promise<ApiResponse> => { // <-- Specify return type
   try {
-    const apiUrl = '/api/topics'; // Consider using environment variables for URLs
+    const apiUrl = '/api/topics'; 
     const res = await fetch(apiUrl, {
-      cache: 'no-store', // Be mindful of caching implications in production
+      cache: 'no-store',
     });
     console.log('Data fetch attempted from:', apiUrl);
 
@@ -59,6 +56,7 @@ const getNotes = async (): Promise<ApiResponse> => { // <-- Specify return type
 
 async function HomePage() {
   const { topics = [] } = await getNotes() || { topics: [] };
+  console.log('Testing this for deployment');
 
   return (
     
@@ -97,7 +95,7 @@ async function HomePage() {
                 </div>
               ))
             ) : (
-              <p className="text-gray-500">No notes found.</p>
+              <p className="text-gray-500">No notes found. Test Deployment</p>
             )}
 
           </div>
