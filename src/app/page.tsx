@@ -26,7 +26,7 @@ interface ApiResponse {
 // ... (getNotes function remains the same) ...
 const getNotes = async (): Promise<ApiResponse> => { // <-- Specify return type
   try {
-    const apiUrl = 'http://localhost:3000/api/topics'; // Consider using environment variables for URLs
+    const apiUrl = '/api/topics'; // Consider using environment variables for URLs
     const res = await fetch(apiUrl, {
       cache: 'no-store', // Be mindful of caching implications in production
     });
