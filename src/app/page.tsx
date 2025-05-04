@@ -23,7 +23,13 @@ interface ApiResponse {
 
 const getNotes = async (): Promise<ApiResponse> => { // <-- Specify return type
   try {
-    const apiUrl = '/api/topics'; 
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}` // Prepend https for Vercel deployments
+      : 'http://localhost:3000'; // CHANGE PORT if your local dev uses a different one
+
+    // Construct the absolute URL
+    const apiUrl = `${baseUrl}/api/topics`;
+    
     const res = await fetch(apiUrl, {
       cache: 'no-store',
     });
@@ -56,7 +62,6 @@ const getNotes = async (): Promise<ApiResponse> => { // <-- Specify return type
 
 async function HomePage() {
   const { topics = [] } = await getNotes() || { topics: [] };
-  console.log('Testing this for deployment');
 
   return (
     
@@ -99,7 +104,7 @@ async function HomePage() {
             )}
 
           </div>
-        </div> {/* End of Main Content Column */}
+        </div>
 
       </div>
 
