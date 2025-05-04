@@ -22,6 +22,7 @@ interface ApiResponse {
 
 
 const getNotes = async (): Promise<ApiResponse> => { // <-- Specify return type
+  console.log("Testing Vercel");
   try {
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}` // Prepend https for Vercel deployments
@@ -29,7 +30,7 @@ const getNotes = async (): Promise<ApiResponse> => { // <-- Specify return type
 
     // Construct the absolute URL
     const apiUrl = `${baseUrl}/api/topics`;
-    
+
     const res = await fetch(apiUrl, {
       cache: 'no-store',
     });
