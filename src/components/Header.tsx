@@ -1,32 +1,15 @@
 'use client'
-import React from 'react';
+import React, { useState } from 'react'
 import Link from 'next/link';
 import Image from 'next/image';
 import { shadow } from '@/styles/utils';
-import { Button } from '@/components/ui/button';
 import DarkModeToggle from './DarkModeToggle';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import RichTextEditor from './RichTextEditor';
-
-// const createNote = async () => {
-//   try {
-
-//   } catch(error) {
-//     console.error("Error loading Topics: ", error);
-//   }
-// }
-
 
 
 
 function Header() {
+
+  
   return (
     <header 
     className='absolute flex h-24 w-full items-center justify-between bg-popover px-2 z-1 sm:min-w-[400px]' 
@@ -39,19 +22,6 @@ function Header() {
             Scrypt <span>Notes</span>
         </h1>
         </Link>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="text-xl">+</Button>
-          </DialogTrigger>
-          <DialogContent className="[&>button]:hidden">
-            <DialogHeader>
-              <DialogTitle><Input type='title' placeholder='Title'/></DialogTitle>
-              <div className='max-w-3xl'>
-                <RichTextEditor />
-              </div>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
 
         <div className="flex gap-4">
           <DarkModeToggle />

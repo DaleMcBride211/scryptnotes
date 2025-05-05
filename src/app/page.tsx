@@ -1,6 +1,7 @@
 'use client'; // <-- Add this directive to make it a Client Component
 
-import React, { useState, useEffect } from 'react'; // <-- Import useState and useEffect
+// Import necessary React hooks and components
+import React, { useState, useEffect, useRef } from 'react'; // <-- Added useRef
 import {
   Card,
   CardContent,
@@ -10,29 +11,89 @@ import {
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
-// Define an interface for the structure of a single note
+import RichTextEditor, { EditorHandle } from '@/components/RichTextEditor'; // Adjust path if needed
+
+
+
 interface Note {
   _id: string;
   title: string;
-  description: string;
+  description: string; 
 }
 
-// Define an interface for the expected API response structure
-interface ApiResponse {
+
+interface GetApiResponse {
   topics: Note[];
 }
 
-// Keep the getNotes function separate for clarity, but adjust API URL logic
-const getNotes = async (): Promise<ApiResponse> => {
+
+interface CreateApiResponse {
+    message: string;
+   
+}
+
+
+
+
+
+const createNote = async (title: string, description: string): Promise<CreateApiResponse> => { 
+  const apiUrl = '/api/topics';
+
+  
+  if (!title.trim()) {
+    throw new Error("Title cannot be empty.");
+  }
+   if (!description || description === '<p></p>') { 
+     console.warn("Description is empty, submitting anyway.");
+    
+   }
+
+
+  try {
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+     
+      body: JSON.stringify({ title, description }),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+        
+        const errorMsg = result?.message || res.statusText;
+        throw new Error(`Failed to create note: ${res.status} ${errorMsg}`);
+    }
+
+    console.log('Create API Response:', result); 
+    return result as CreateApiResponse;
+
+  } catch (error) {
+    console.error("Error creating note:", error);
+    
+    throw error;
+  }
+};
+
+
+const getNotes = async (): Promise<GetApiResponse> => {
   console.log("Attempting to fetch notes from client...");
   try {
-    // On the client-side, use a relative path for API routes within the same app.
-    // The browser automatically resolves this against the current origin.
-    const apiUrl = '/api/topics'; // <-- Use relative path
+    const apiUrl = '/api/topics';
 
     const res = await fetch(apiUrl, {
-      cache: 'no-store', // Still useful to prevent caching if needed
+      cache: 'no-store',
     });
     console.log('Data fetch attempted from:', apiUrl);
 
@@ -41,61 +102,125 @@ const getNotes = async (): Promise<ApiResponse> => {
       throw new Error(`Failed to fetch Topics: ${res.status} ${res.statusText}. Body: ${errorBody}`);
     }
 
-    const data = await res.json() as ApiResponse;
+    const data = await res.json(); 
 
-    if (!data || !Array.isArray(data.topics)) {
-      console.warn('API response did not contain a topics array:', data);
-      return { topics: [] };
-    }
+    
+     if (typeof data !== 'object' || data === null || !Array.isArray(data.topics)) {
+        console.warn('API response did not contain a topics array:', data);
+        return { topics: [] }; 
+     }
 
-    return data;
+   
+    return data as GetApiResponse;
 
   } catch (error) {
     console.error("Error loading Topics: ", error);
-    // Re-throw the error so the calling useEffect can catch it
-    throw error; // <-- Re-throw
+    throw error; 
   }
 };
 
-// No longer an async Server Component
+// --- HomePage Component ---
+
 function HomePage() {
-  // State to hold the fetched notes
-  const [notesData, setNotesData] = useState<ApiResponse>({ topics: [] });
-  // State to track loading status
+  // State for notes data, loading, and errors
+  const [notesData, setNotesData] = useState<GetApiResponse>({ topics: [] });
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  // State to hold potential errors
   const [error, setError] = useState<string | null>(null);
 
-  // useEffect hook to fetch data when the component mounts
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true); // Start loading
-      setError(null); // Reset error state
-      try {
-        const data = await getNotes();
-        setNotesData(data); // Update state with fetched data
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message); // Set error message
-        } else {
-          setError("An unknown error occurred.");
-        }
-        setNotesData({ topics: [] }); // Reset data on error
-      } finally {
-        setIsLoading(false); // Stop loading regardless of success or failure
+  // State for the New Note Dialog
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [noteTitle, setNoteTitle] = useState('');
+  const [isCreatingNote, setIsCreatingNote] = useState(false); // Loading state for creation
+  const [createError, setCreateError] = useState<string | null>(null); // Error state for creation
+
+  // Ref for the RichTextEditor
+  const editorRef = useRef<EditorHandle>(null);
+
+  // Function to fetch notes and update state
+  const fetchAndSetNotes = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getNotes();
+      setNotesData(data);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred while fetching notes.");
       }
-    };
+      setNotesData({ topics: [] });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchData();
-  }, []); // <-- Empty dependency array ensures this runs only once on mount
+  // useEffect hook to fetch data initially when the component mounts
+  useEffect(() => {
+    fetchAndSetNotes();
+  }, []); // Runs once on mount
 
-  // Conditional rendering based on loading and error states
+  // Handler for Dialog's open state changes
+  const handleDialogOpenChange = async (open: boolean) => {
+    setIsDialogOpen(open);
+    setCreateError(null); // Clear previous creation errors when opening/closing
+
+    if (!open && !isCreatingNote) {
+        // DIALOG IS CLOSING (and not already in the process of creating)
+        // If we wanted to save on *any* close (even clicking outside), we'd do it here.
+        // However, it's often better UX to have an explicit "Save" button.
+        // For now, we'll trigger save from a button, or automatically if needed.
+        console.log("Dialog closed without explicit save action.");
+        // Reset fields only if needed when closing without saving
+        // setNoteTitle(''); // Reset title if desired
+
+    } else if (open) {
+        // DIALOG IS OPENING
+        // Reset fields for a new note entry
+        setNoteTitle('');
+        // Optionally reset editor content if needed (might require an imperative handle method)
+        // editorRef.current?.clearEditorContent?.(); // Example if you added clearEditorContent
+        setCreateError(null); // Clear creation error messages
+    }
+  };
+
+  // Handler for submitting the new note
+  const handleCreateNote = async () => {
+    setIsCreatingNote(true);
+    setCreateError(null); // Clear previous errors
+
+    const title = noteTitle;
+    const description = editorRef.current?.getEditorContent() || ''; // Get content from editor ref
+
+    try {
+        // Call the modified createNote API function
+        await createNote(title, description);
+
+        // Success!
+        setIsCreatingNote(false);
+        setIsDialogOpen(false); // Close the dialog
+        await fetchAndSetNotes(); // Refresh the notes list
+
+    } catch (err) {
+        console.error("Failed to create note:", err);
+        if (err instanceof Error) {
+            setCreateError(err.message); // Display creation error in the dialog
+        } else {
+            setCreateError("An unknown error occurred while saving.");
+        }
+        setIsCreatingNote(false); // Stop loading indicator
+    }
+  };
+
+
+  // --- Render Logic ---
+
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center"> {/* Optional background */}
-        <div className="flex items-center text-2xl font-medium"> {/* Larger text/icon */}
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex items-center text-2xl font-medium">
           Loading notes
-          <Loader2 className="ml-3 h-8 w-8 animate-spin" /> {/* Adjusted spacing & size */}
+          <Loader2 className="ml-3 h-8 w-8 animate-spin" />
         </div>
       </div>
     );
@@ -105,48 +230,97 @@ function HomePage() {
     return <div className="mt-25 p-4 text-red-600">Error fetching notes: {error}</div>;
   }
 
-  // Extract topics from state for rendering
   const { topics } = notesData;
 
   return (
     <div className="grid [grid-template-columns:200px_1fr] gap-2 h-screen">
       {/* Sidebar Column */}
-      <div className="mt-25 p-4"> {/* Added padding for visual spacing */}
-        Tags
-        {/* You might fetch/display tags here similarly */}
+      <div className="mt-25 p-4 justify-items-center">
+        <div className="mb-5">
+            {/* --- New Note Dialog --- */}
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
+              <DialogTrigger asChild>
+                <Button className="text-xl w-full" onClick={() => setIsDialogOpen(true)}>New Note</Button>
+              </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px] md:max-w-[750px]"> {/* Removed [&>button]:hidden to allow close button */}
+              <DialogHeader>
+                <DialogTitle>Create a New Note</DialogTitle>
+                 {/* Display creation errors */}
+                 {createError && (
+                    <p className="text-sm text-red-600 mt-2">{createError}</p>
+                 )}
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                 <Input
+                    id="noteTitle"
+                    type='text' // Corrected type
+                    placeholder='Note Title'
+                    value={noteTitle ? noteTitle : 'Untitled'}
+                    onChange={(e) => setNoteTitle(e.target.value)}
+                    className="text-lg"
+                    disabled={isCreatingNote} // Disable input while saving
+                 />
+                 <div className='max-w-3xl'> 
+                    
+                    <RichTextEditor
+                        key={String(isDialogOpen)} // Force re-render/reset based on open state (optional)
+                        ref={editorRef}
+                    />
+                 </div>
+              </div>
+              {/* --- Dialog Footer with Save/Cancel --- */}
+              <div className="flex justify-end gap-2 mt-4">
+                 <Button
+                    variant="outline"
+                    onClick={() => setIsDialogOpen(false)} // Simple close action
+                    disabled={isCreatingNote}
+                 >
+                    Cancel
+                 </Button>
+                 <Button
+                    onClick={handleCreateNote}
+                    disabled={isCreatingNote || !noteTitle.trim()} // Disable if saving or title is empty
+                 >
+                    {isCreatingNote ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                        </>
+                    ) : (
+                        'Save Note'
+                    )}
+                 </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+        Tags (Placeholder)
       </div>
 
       {/* Main Content Column */}
       <div className="overflow-y-auto p-4 h-full no-scrollbar">
-        {/* Container for the masonry-like columns */}
-        <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-[18rem] gap-4 mt-25"> {/* Responsive columns */}
+        <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-[15rem] gap-4 mt-25">
           {topics.length > 0 ? (
             topics.map((note: Note) => (
               <div key={note._id} className="break-inside-avoid mb-4">
-                {/* Individual Card */}
-                <Card className="flex flex-col max-h-[500px] w-full overflow-hidden"> {/* Adjusted width */}
+                <Card className="flex flex-col max-h-[500px] w-full overflow-hidden">
                   <CardHeader>
                     <CardTitle>{note.title}</CardTitle>
                   </CardHeader>
-                  {/* Card Content Area */}
                   <CardContent className="flex-grow overflow-hidden">
-                    {/* Inner div for prose styling and scrolling */}
-                    {/* Consider limiting height here too if CardContent isn't enough */}
-                    <div className="prose max-w-none overflow-y-auto h-full">
-                       {/* Use whitespace-pre-wrap to respect newlines in description */}
-                      <p style={{ whiteSpace: 'pre-wrap' }}>{note.description}</p>
-                    </div>
+                    <div
+                        className="prose max-w-none overflow-y-auto h-full"
+                        dangerouslySetInnerHTML={{ __html: note.description || '<p></p>' }} // Handle potentially null/empty description
+                    />
                   </CardContent>
                   <CardFooter>
-                    {/* Add functionality to the Delete button */}
-                    <Button variant="destructive" size="sm">Delete</Button> {/* Adjusted styling */}
+                    <Button variant="destructive" size="sm">Delete</Button> {/* Add delete functionality later */}
+                    
                   </CardFooter>
                 </Card>
               </div>
             ))
           ) : (
-             // Rendered only if not loading, no error, and topics array is empty
-            <p className="text-gray-500 col-span-full">No notes found.</p> 
+            <p className="text-gray-500 col-span-full">No notes found. Create one!</p>
           )}
         </div>
       </div>
