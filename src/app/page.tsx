@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
+import { Loader2 } from "lucide-react";
 
 // Define an interface for the structure of a single note
 interface Note {
@@ -90,11 +91,18 @@ function HomePage() {
 
   // Conditional rendering based on loading and error states
   if (isLoading) {
-    return <div className="p-4">Loading notes...</div>; // Or a spinner component
+    return (
+      <div className="flex min-h-screen items-center justify-center"> {/* Optional background */}
+        <div className="flex items-center text-2xl font-medium"> {/* Larger text/icon */}
+          Loading notes
+          <Loader2 className="ml-3 h-8 w-8 animate-spin" /> {/* Adjusted spacing & size */}
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="p-4 text-red-600">Error fetching notes: {error}</div>;
+    return <div className="mt-25 p-4 text-red-600">Error fetching notes: {error}</div>;
   }
 
   // Extract topics from state for rendering
@@ -111,7 +119,7 @@ function HomePage() {
       {/* Main Content Column */}
       <div className="overflow-y-auto p-4 h-full no-scrollbar">
         {/* Container for the masonry-like columns */}
-        <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 mt-25"> {/* Responsive columns */}
+        <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-[18rem] gap-4 mt-25"> {/* Responsive columns */}
           {topics.length > 0 ? (
             topics.map((note: Note) => (
               <div key={note._id} className="break-inside-avoid mb-4">
