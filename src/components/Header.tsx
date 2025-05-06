@@ -100,11 +100,8 @@ function Header() {
                     <SheetTrigger asChild>
                         <Button onClick={() => setIsSheetOpen(true)}>Ask Gemini</Button>
                     </SheetTrigger>
-                    <SheetContent
-                        side="bottom" // Suggestion: For mobile, a bottom sheet often feels more natural
-                        className="w-full h-[90vh] sm:h-auto sm:max-w-lg flex flex-col p-0" // Full width on mobile, allow height to adjust or set max
-                    >
-                        <SheetHeader className="px-6 pt-6 pb-4 border-b"> {/* Added padding and border */}
+                    <SheetContent className="sm:max-w-lg w-full flex flex-col"> {/* Added flex flex-col for layout */}
+                        <SheetHeader>
                             <SheetTitle>Ask Gemini</SheetTitle>
                             <SheetDescription>
                                 Enter your notes below to get them reworded or ask a question about them.
@@ -112,41 +109,41 @@ function Header() {
                             </SheetDescription>
                         </SheetHeader>
 
-                        <ScrollArea className="flex-grow overflow-y-auto"> {/* Make the content area scrollable */}
-                            <div className="p-6 flex flex-col gap-4"> {/* Inner padding for content */}
-                                <Textarea
-                                    placeholder="Paste your notes here..."
-                                    value={promptText}
-                                    onChange={(e) => setPromptText(e.target.value)}
-                                    // Consider reducing rows for smaller screens if needed, or let flex handle it
-                                    // rows={6} // Slightly reduced for mobile, but dynamic height is better
-                                    disabled={isLoading}
-                                    className="resize-none min-h-[150px] sm:min-h-[200px] md:min-h-[250px] flex-1" // Responsive min-height & allow flex
-                                />
-                                {error && (
-                                    <Alert variant="destructive">
-                                        <Terminal className="h-4 w-4" />
-                                        <AlertTitle>Error</AlertTitle>
-                                        <AlertDescription>{error}</AlertDescription>
-                                    </Alert>
-                                )}
-                                {aiResponse && !error && (
-                                    <div className="p-3 border rounded-md bg-muted flex-grow min-h-[150px] sm:min-h-[200px] flex flex-col"> {/* Added flex & flex-col */}
-                                        <h3 className="font-semibold mb-2 text-sm sm:text-base">Gemini's Response:</h3>
-                                        <ScrollArea className="flex-grow h-[200px] sm:h-[250px] md:h-[300px] whitespace-pre-wrap rounded-md"> {/* Ensure this ScrollArea can grow */}
-                                            {aiResponse}
-                                        </ScrollArea>
-                                    </div>
-                                )}
-                                {isLoading && <p className="text-center text-muted-foreground py-4">Generating response...</p>}
-                            </div>
-                        </ScrollArea>
+                        <div className="py-4 flex-grow flex flex-col gap-4 sm: overflow-y-auto"> {/* Added overflow-y-auto HERE */}
+                            <Textarea
+                                placeholder="Paste your notes here..."
+                                value={promptText}
+                                onChange={(e) => setPromptText(e.target.value)}
+                                rows={8} // Provides an initial height hint
+                                disabled={isLoading}
+                                className="resize-none h-[300px]" // Textarea will scroll internally if content > 300px
+                                                                // Or, you could remove h-[300px] to let it grow
+                                                                // and contribute to overall page scroll.
+                            />
+                            {error && (
+                                <Alert variant="destructive">
+                                    <Terminal className="h-4 w-4" />
+                                    <AlertTitle>Error</AlertTitle>
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                            )}
+                            {aiResponse && !error && (
+                                <div className="mt-4 p-3 border rounded-md bg-muted flex-grow">
+                                    <h3 className="font-semibold mb-2">Gemini's Response:</h3>
+                                    {/* This is the key part for scrolling the AI response: */}
+                                    <ScrollArea className="h-[300px]"> {/* Adjust height as needed */}
+                                        {aiResponse}
+                                    </ScrollArea>
+                                </div>
+                            )}
+                            {isLoading && <p className="text-center text-muted-foreground">Generating response...</p>}
+                        </div>
 
-                        <SheetFooter className="px-6 py-4 border-t mt-auto bg-background sm:bg-transparent"> {/* Added padding, border, and sticky feel */}
+                        <SheetFooter className="mt-auto"> {/* Ensures button is at the bottom */}
                             <Button
                                 onClick={handleGenerateClick}
                                 disabled={isLoading || !promptText.trim()}
-                                className="w-full" // Full width on mobile for easier tapping
+                                className="w-full sm:w-auto" // Responsive width
                             >
                                 {isLoading ? 'Generating...' : 'Generate'}
                             </Button>
