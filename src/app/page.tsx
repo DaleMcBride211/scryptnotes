@@ -251,9 +251,9 @@ function HomePage() {
 
   if (isLoadingInitial) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="flex items-center text-2xl font-medium text-slate-700">
-          Loading notes <Loader2 className="ml-3 h-8 w-8 animate-spin text-slate-600" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex items-center text-2xl font-medium">
+          Loading notes <Loader2 className="ml-3 h-8 w-8 animate-spin" />
         </div>
       </div>
     );
