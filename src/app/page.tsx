@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import RichTextEditor, { EditorHandle } from '@/components/RichTextEditor'; 
+import RichTextEditor, { EditorHandle } from '@/components/RichTextEditor';
 
 interface Note {
   _id: string;
@@ -31,7 +31,7 @@ interface ApiMessageResponse {
 }
 
 // --- API Call Functions ---
-
+// (Your API functions: createNoteAPI, getNotesAPI, deleteNoteAPI, updateNoteAPI remain unchanged)
 const createNoteAPI = async (title: string, description: string): Promise<ApiMessageResponse> => {
   const apiUrl = '/api/topics';
   if (!title.trim()) throw new Error("Title cannot be empty.");
@@ -102,14 +102,12 @@ const updateNoteAPI = async (noteId: string, title: string, description: string)
     if (!res.ok) {
       throw new Error(result.message || `Failed to update note: ${res.status} ${res.statusText}`);
     }
-    // The backend now returns the updated topic in result.topic
     return result;
   } catch (error) {
     console.error(`Error updating note ${noteId}:`, error);
     throw error;
   }
 };
-
 
 
 // --- HomePage Component ---
@@ -123,7 +121,7 @@ function HomePage() {
   const [newNoteTitle, setNewNoteTitle] = useState('');
   const [isCreatingNote, setIsCreatingNote] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
-  const createEditorRef = useRef<EditorHandle>(null); 
+  const createEditorRef = useRef<EditorHandle>(null);
 
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
   const [deleteErrors, setDeleteErrors] = useState<{ [key: string]: string | null }>({});
@@ -196,15 +194,14 @@ function HomePage() {
     setIsEditDialogOpen(open);
     if (!open) {
       setEditingNote(null);
-      setEditError(null); 
+      setEditError(null);
     }
   };
 
   const openEditDialog = (note: Note) => {
     setEditingNote(note);
     setEditNoteTitle(note.title);
-    setEditError(null); 
-    
+    setEditError(null);
     setIsEditDialogOpen(true);
   };
 
@@ -254,9 +251,9 @@ function HomePage() {
 
   if (isLoadingInitial) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="flex items-center text-2xl font-medium">
-          Loading notes <Loader2 className="ml-3 h-8 w-8 animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <div className="flex items-center text-2xl font-medium text-slate-700">
+          Loading notes <Loader2 className="ml-3 h-8 w-8 animate-spin text-slate-600" />
         </div>
       </div>
     );
@@ -264,7 +261,7 @@ function HomePage() {
 
   if (fetchError && notesData.topics.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4 text-red-600 text-xl">
+      <div className="flex min-h-screen items-center justify-center p-4 text-red-600 text-xl bg-slate-50">
         Error fetching notes: {fetchError}
       </div>
     );
@@ -273,15 +270,16 @@ function HomePage() {
   const { topics } = notesData;
 
   return (
-    <div className="grid [grid-template-columns:200px_1fr] gap-2 h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
+
       {/* Sidebar Column */}
-      <div className="mt-25 p-4 border-r">
-        <div className="mb-5">
+      <div className="w-full md:w-[240px] lg:w-[280px] p-3 md:p-4 border-b md:border-b-0 md:border-r border-slate-200 md:h-screen md:sticky md:top-0 md:flex md:flex-col flex-shrink-0">
+        <div className="py-2 md:py-4 md:mt-4">
           <Dialog open={isCreateDialogOpen} onOpenChange={handleCreateDialogOpenChange}>
             <DialogTrigger asChild>
-              <Button className="text-xl w-full">New Note</Button>
+              <Button className="text-lg w-full py-2.5 mt-25 md:py-3">New Note</Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] md:max-w-[750px] [&>button]:hidden">
+            <DialogContent className="sm:max-w-[600px] md:max-w-[750px] lg:max-w-[800px] w-[95vw] [&>button]:hidden">
               <DialogHeader>
                 <DialogTitle>Create a New Note</DialogTitle>
                 {createError && (
@@ -298,7 +296,7 @@ function HomePage() {
                   className="text-lg"
                   disabled={isCreatingNote}
                 />
-                <div className='max-w-3xl min-h-[200px] border rounded-md overflow-hidden'>
+                <div className='w-full min-h-[200px] max-h-[60vh] border rounded-md overflow-y-auto'>
                   <RichTextEditor
                     key={`create-editor-${isCreateDialogOpen}`}
                     ref={createEditorRef}
@@ -321,11 +319,13 @@ function HomePage() {
             </DialogContent>
           </Dialog>
         </div>
-        <div className="text-sm text-gray-500">Tags (Placeholder)</div>
+        <div className="text-sm text-gray-500 mt-4 md:mt-6 hidden md:block">
+          Tags (Placeholder)
+        </div>
       </div>
 
       {/* Main Content Column */}
-      <div className="overflow-y-auto p-4 h-full no-scrollbar">
+      <div className="flex-grow p-3 md:p-6 lg:p-8 overflow-y-auto">
         {isRefreshing && (
           <div className="text-center p-4 text-gray-600">
             Refreshing notes... <Loader2 className="inline-block ml-2 h-5 w-5 animate-spin" />
@@ -336,104 +336,104 @@ function HomePage() {
             <span className="font-medium">Update Error:</span> {fetchError}
           </div>
         )}
-        <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-[15rem] gap-4 mt-25">
+
+        <div className="columns-1 sm:columns-2 md:columns-2 lg:columns-3 xl:columns-4 2xl:columns-[18rem] gap-4 md:gap-5">
           {topics.length > 0 ? (
             topics.map((note: Note) => (
-              <div key={note._id} className="break-inside-avoid mb-4">
-                <Card className="flex flex-col w-full overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="truncate text-lg">{note.title}</CardTitle>
+              <div key={note._id} className="break-inside-avoid mb-4 md:mb-5 mt-25">
+                <Card className="flex flex-col w-full h-full overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200 ease-in-out">
+                  <CardHeader className="pb-2 pt-3 px-4">
+                    <CardTitle className="truncate text-lg md:text-xl">{note.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="flex-grow"> 
+                  <CardContent className="flex-grow px-4 py-2">
                     <div
-                      className="prose max-w-none text-sm" 
+                      className="prose prose-sm max-w-none"
                       dangerouslySetInnerHTML={{ __html: note.description || '<p><em>No content.</em></p>' }}
                     />
                   </CardContent>
-                  <CardFooter className="flex justify-between items-center pt-3 border-t">
+                  <CardFooter className="flex justify-between items-center pt-2 pb-3 px-4 border-t">
                     <div className="text-xs text-gray-400">Tag Placeholder</div>
-                    <div className="flex gap-2">
-                      
+                    <div className="flex gap-1.5 md:gap-2">
+
                       <Dialog
-                          open={isEditDialogOpen && editingNote?._id === note._id}
-                          onOpenChange={(open) => {
-                              if (editingNote?._id === note._id) {
-                                  handleEditDialogOpenChange(open);
-                              }
-                          }}
+                        open={isEditDialogOpen && editingNote?._id === note._id}
+                        onOpenChange={(open) => {
+                          if (editingNote?._id === note._id) {
+                            handleEditDialogOpenChange(open);
+                          }
+                        }}
                       >
-                          <DialogTrigger asChild>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-blue-600 border-blue-500 cursor-pointer hover:bg-blue-50 px-2.5 md:px-3"
+                            onClick={() => openEditDialog(note)}
+                            disabled={isUpdatingNote && editingNote?._id === note._id}
+                          >
+                            Edit
+                          </Button>
+                        </DialogTrigger>
+                        {editingNote && editingNote._id === note._id && (
+                          <DialogContent className="sm:max-w-[600px] md:max-w-[750px] lg:max-w-[800px] w-[95vw] [&>button]:hidden">
+                            <DialogHeader>
+                              <DialogTitle>Edit Note</DialogTitle>
+                              <DialogDescription>
+                                Make changes to your note titled "{editingNote.title}".
+                              </DialogDescription>
+                              {editError && (
+                                <p className="text-sm text-red-600 mt-2 p-2 bg-red-50 rounded">{editError}</p>
+                              )}
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <Input
+                                id={`editNoteTitle-${editingNote._id}`}
+                                type='text'
+                                placeholder='Note Title'
+                                value={editNoteTitle}
+                                onChange={(e) => setEditNoteTitle(e.target.value)}
+                                className="text-lg"
+                                disabled={isUpdatingNote}
+                              />
+                              <div className='w-full min-h-[200px] max-h-[60vh] border rounded-md overflow-y-auto'>
+                                <RichTextEditor
+                                  key={`edit-editor-${editingNote._id}`}
+                                  ref={editEditorRef}
+                                  initialContent={editingNote.description}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2 mt-4">
+                              <DialogClose asChild>
+                                <Button variant="outline" disabled={isUpdatingNote} className="cursor-pointer">Cancel</Button>
+                              </DialogClose>
                               <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-blue-600 border-blue-500 cursor-pointer hover:bg-blue-50"
-                                  onClick={() => openEditDialog(note)}
-                                  disabled={isUpdatingNote && editingNote?._id === note._id}
+                                onClick={handleUpdateNote}
+                                disabled={isUpdatingNote || handleEditDialogTitleInvalid()}
+                                className="cursor-pointer"
                               >
-                                  Edit
+                                {isUpdatingNote ? (
+                                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving Changes...</>
+                                ) : ('Save Changes')}
                               </Button>
-                          </DialogTrigger>
-                          {/* Conditionally render DialogContent to ensure correct ref and initialContent application */}
-                          {editingNote && editingNote._id === note._id && (
-                              <DialogContent className="sm:max-w-[600px] md:max-w-[750px] [&>button]:hidden">
-                                  <DialogHeader>
-                                      <DialogTitle>Edit Note</DialogTitle>
-                                      <DialogDescription>
-                                          Make changes to your note titled "{editingNote.title}".
-                                      </DialogDescription>
-                                      {editError && (
-                                          <p className="text-sm text-red-600 mt-2 p-2 bg-red-50 rounded">{editError}</p>
-                                      )}
-                                  </DialogHeader>
-                                  <div className="grid gap-4 py-4">
-                                      <Input
-                                          id={`editNoteTitle-${editingNote._id}`}
-                                          type='text'
-                                          placeholder='Note Title'
-                                          value={editNoteTitle}
-                                          onChange={(e) => setEditNoteTitle(e.target.value)}
-                                          className="text-lg"
-                                          disabled={isUpdatingNote}
-                                      />
-                                      {/* MODIFIED DIV WRAPPER FOR RichTextEditor */}
-                                      <div className='max-w-3xl min-h-[200px] max-h-[450px] border rounded-md overflow-y-auto'> {/* Example: max-h-[450px] */}
-                                          <RichTextEditor
-                                              key={`edit-editor-${editingNote._id}`}
-                                              ref={editEditorRef}
-                                              initialContent={editingNote.description}
-                                          />
-                                      </div>
-                                  </div>
-                                  <div className="flex justify-end gap-2 mt-4">
-                                      <DialogClose asChild>
-                                          <Button variant="outline" disabled={isUpdatingNote} className="cursor-pointer">Cancel</Button>
-                                      </DialogClose>
-                                      <Button
-                                          onClick={handleUpdateNote}
-                                          disabled={isUpdatingNote || handleEditDialogTitleInvalid()}
-                                          className="cursor-pointer"
-                                      >
-                                          {isUpdatingNote ? (
-                                              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving Changes...</>
-                                          ) : ('Save Changes')}
-                                      </Button>
-                                  </div>
-                              </DialogContent>
-                          )}
+                            </div>
+                          </DialogContent>
+                        )}
                       </Dialog>
-                      <Dialog> 
+
+                      <Dialog>
                         <DialogTrigger asChild>
                           <Button
                             variant="destructive"
                             size="sm"
                             disabled={deletingNoteId === note._id}
-                            className="cursor-pointer">
+                            className="cursor-pointer px-2.5 md:px-3">
                             {deletingNoteId === note._id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : ('Delete')}
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="[&>button]:hidden">
+                        <DialogContent className="sm:max-w-md w-[95vw] [&>button]:hidden">
                           <DialogHeader>
                             <DialogTitle>Are you absolutely sure?</DialogTitle>
                             <DialogDescription>
@@ -468,7 +468,7 @@ function HomePage() {
             !isLoadingInitial && !isRefreshing && (
               <div className="text-center text-gray-500 col-span-full py-10">
                 <p className="text-xl">No notes found.</p>
-                
+                <p className="mt-2 text-sm">Click "New Note" to get started.</p>
               </div>
             )
           )}
