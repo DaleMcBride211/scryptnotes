@@ -280,7 +280,7 @@ function HomePage() {
             <DialogTrigger asChild>
               <Button className="text-xl w-full">New Note</Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] md:max-w-[750px]">
+            <DialogContent className="sm:max-w-[600px] md:max-w-[750px] [&>button]:hidden">
               <DialogHeader>
                 <DialogTitle>Create a New Note</DialogTitle>
                 {createError && (
@@ -366,7 +366,7 @@ function HomePage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-blue-600 border-blue-500 hover:bg-blue-50"
+                            className="text-blue-600 border-blue-500 cursor-pointer hover:bg-blue-50"
                             onClick={() => openEditDialog(note)}
                             disabled={isUpdatingNote && editingNote?._id === note._id} 
                           >
@@ -375,7 +375,7 @@ function HomePage() {
                         </DialogTrigger>
                         {/* Conditionally render DialogContent to ensure correct ref and initialContent application */}
                         {editingNote && editingNote._id === note._id && (
-                          <DialogContent className="sm:max-w-[600px] md:max-w-[750px]">
+                          <DialogContent className="sm:max-w-[600px] md:max-w-[750px] [&>button]:hidden">
                             <DialogHeader>
                               <DialogTitle>Edit Note</DialogTitle>
                               <DialogDescription>
@@ -405,12 +405,12 @@ function HomePage() {
                             </div>
                             <div className="flex justify-end gap-2 mt-4">
                               <DialogClose asChild>
-                                <Button variant="outline" disabled={isUpdatingNote}>Cancel</Button>
+                                <Button variant="outline" disabled={isUpdatingNote} className="cursor-pointer">Cancel</Button>
                               </DialogClose>
                               <Button
                                 onClick={handleUpdateNote}
                                 disabled={isUpdatingNote || handleEditDialogTitleInvalid()}
-                              >
+                                className="cursor-pointer">
                                 {isUpdatingNote ? (
                                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving Changes...</>
                                 ) : ('Save Changes')}
@@ -425,13 +425,13 @@ function HomePage() {
                             variant="destructive"
                             size="sm"
                             disabled={deletingNoteId === note._id}
-                          >
+                            className="cursor-pointer">
                             {deletingNoteId === note._id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : ('Delete')}
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="[&>button]:hidden">
                           <DialogHeader>
                             <DialogTitle>Are you absolutely sure?</DialogTitle>
                             <DialogDescription>
@@ -443,13 +443,13 @@ function HomePage() {
                           )}
                           <div className="flex justify-end gap-2 mt-4">
                             <DialogClose asChild>
-                              <Button variant="outline" disabled={deletingNoteId === note._id}>Cancel</Button>
+                              <Button variant="outline" disabled={deletingNoteId === note._id} className="cursor-pointer">Cancel</Button>
                             </DialogClose>
                             <Button
                               variant='destructive'
                               onClick={() => handleDeleteNote(note._id)}
                               disabled={deletingNoteId === note._id}
-                            >
+                              className="cursor-pointer">
                               {deletingNoteId === note._id ? (
                                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting...</>
                               ) : ('Confirm Delete')}
