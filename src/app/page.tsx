@@ -337,10 +337,10 @@ function HomePage() {
           </div>
         )}
 
-        <div className="columns-1 sm:columns-2 md:columns-2 lg:columns-3 xl:columns-4 2xl:columns-[18rem] gap-4 md:gap-5">
+        <div className="mt-25 columns-1 sm:columns-2 md:columns-2 lg:columns-3 xl:columns-4 2xl:columns-[18rem] gap-4 md:gap-5">
           {topics.length > 0 ? (
             topics.map((note: Note) => (
-              <div key={note._id} className="break-inside-avoid mb-4 md:mb-5 mt-25">
+              <div key={note._id} className="break-inside-avoid mb-4 md:mb-5 ">
                 <Card className="flex flex-col w-full h-full overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200 ease-in-out">
                   <CardHeader className="pb-2 pt-3 px-4">
                     <CardTitle className="truncate text-lg md:text-xl">{note.title}</CardTitle>
