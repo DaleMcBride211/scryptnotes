@@ -27,7 +27,7 @@ export async function POST(req) {
         }
 
         // Construct a more specific prompt for rewording or answering questions
-        const fullPrompt = `Please reword the following notes. You can also answer questions about the notes if a question is asked:\n\n${promptFromClient}`;
+        const fullPrompt = `Please reword the following notes. Just provide a new way to structure and word them. Only give one option. Do not label it just give the new structuce. \n\n${promptFromClient}`;
 
         
         const generationResponse = await ai.models.generateContent({

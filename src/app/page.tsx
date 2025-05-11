@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import RichTextEditor, { EditorHandle } from '@/components/RichTextEditor';
+import GeminiSheet from '@/components/GeminiSheet'
 
 interface Note {
   _id: string;
@@ -304,6 +305,7 @@ function HomePage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">
+                <GeminiSheet />
                 <DialogClose asChild>
                   <Button variant="outline" disabled={isCreatingNote}>Cancel</Button>
                 </DialogClose>
@@ -404,19 +406,21 @@ function HomePage() {
                               </div>
                             </div>
                             <div className="flex justify-end gap-2 mt-4">
-                              <DialogClose asChild>
-                                <Button variant="outline" disabled={isUpdatingNote} className="cursor-pointer">Cancel</Button>
-                              </DialogClose>
-                              <Button
-                                onClick={handleUpdateNote}
-                                disabled={isUpdatingNote || handleEditDialogTitleInvalid()}
-                                className="cursor-pointer"
-                              >
-                                {isUpdatingNote ? (
-                                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving Changes...</>
-                                ) : ('Save Changes')}
-                              </Button>
-                            </div>
+                                  {/* Pass the note's description to GeminiSheet */}
+                                  <GeminiSheet initialEditorContent={editingNote.description} />
+                                  <DialogClose asChild>
+                                    <Button variant="outline" disabled={isUpdatingNote} className="cursor-pointer">Cancel</Button>
+                                  </DialogClose>
+                                  <Button
+                                    onClick={handleUpdateNote}
+                                    disabled={isUpdatingNote || handleEditDialogTitleInvalid()}
+                                    className="cursor-pointer"
+                                  >
+                                    {isUpdatingNote ? (
+                                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving Changes...</>
+                                    ) : ('Save Changes')}
+                                  </Button>
+                                </div>
                           </DialogContent>
                         )}
                       </Dialog>
