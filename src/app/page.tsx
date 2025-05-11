@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import RichTextEditor, { EditorHandle } from '@/components/RichTextEditor';
-import GeminiSheet from '@/components/GeminiSheet'
+import GeminiSheet from '@/components/GeminiSheet'; // Assuming GeminiSheet will be adapted
 
 interface Note {
   _id: string;
@@ -32,7 +32,6 @@ interface ApiMessageResponse {
 }
 
 // --- API Call Functions ---
-// (Your API functions: createNoteAPI, getNotesAPI, deleteNoteAPI, updateNoteAPI remain unchanged)
 const createNoteAPI = async (title: string, description: string): Promise<ApiMessageResponse> => {
   const apiUrl = '/api/topics';
   if (!title.trim()) throw new Error("Title cannot be empty.");
@@ -194,7 +193,7 @@ function HomePage() {
   const handleEditDialogOpenChange = (open: boolean) => {
     setIsEditDialogOpen(open);
     if (!open) {
-      setEditingNote(null);
+      setEditingNote(null); // Clear editingNote when dialog closes
       setEditError(null);
     }
   };
@@ -204,6 +203,7 @@ function HomePage() {
     setEditNoteTitle(note.title);
     setEditError(null);
     setIsEditDialogOpen(true);
+    // The RichTextEditor's `initialContent` prop and `key` will handle content update
   };
 
   const handleUpdateNote = async () => {
@@ -224,7 +224,7 @@ function HomePage() {
       await updateNoteAPI(editingNote._id, editNoteTitle, description);
       setIsUpdatingNote(false);
       setIsEditDialogOpen(false);
-      setEditingNote(null);
+      setEditingNote(null); // Clear editingNote after successful update
       await fetchAndSetNotes();
     } catch (err) {
       setEditError(err instanceof Error ? err.message : "An unknown error occurred while updating.");
@@ -239,7 +239,8 @@ function HomePage() {
 
     try {
       await deleteNoteAPI(noteId);
-      await fetchAndSetNotes();
+      await fetchAndSetNotes(); // Refresh notes list
+      // No need to manually remove from state if fetchAndSetNotes re-fetches all
     } catch (err) {
       setDeleteErrors(prev => ({
         ...prev,
@@ -249,6 +250,20 @@ function HomePage() {
       setDeletingNoteId(null);
     }
   };
+
+  // --- Functions to provide editor content to GeminiSheet ---
+  const getCurrentCreateEditorContent = useCallback(() => {
+    return createEditorRef.current?.getEditorContent();
+  }, []); // Dependency array is empty as createEditorRef itself doesn't change
+
+  const getCurrentEditEditorContent = useCallback(() => {
+    // Ensure editingNote and its description are available, and editor ref is current
+    if (editingNote && editEditorRef.current) {
+      return editEditorRef.current.getEditorContent();
+    }
+    return editingNote?.description || ''; // Fallback to initial description if editor not ready
+  }, [editingNote]); // Depends on editingNote to ensure context is right
+
 
   if (isLoadingInitial) {
     return (
@@ -299,13 +314,15 @@ function HomePage() {
                 />
                 <div className='w-full min-h-[200px] max-h-[60vh] border rounded-md overflow-y-auto'>
                   <RichTextEditor
-                    key={`create-editor-${isCreateDialogOpen}`}
+                    key={`create-editor-${isCreateDialogOpen}`} // Ensures editor can be reset if needed
                     ref={createEditorRef}
+                    // initialContent="" // Cleared by clearEditorContent on dialog open
                   />
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">
-                <GeminiSheet />
+                {/* MODIFIED: Pass the getter function for create editor's content */}
+                <GeminiSheet getEditorContent={getCurrentCreateEditorContent} />
                 <DialogClose asChild>
                   <Button variant="outline" disabled={isCreatingNote}>Cancel</Button>
                 </DialogClose>
@@ -360,8 +377,9 @@ function HomePage() {
                       <Dialog
                         open={isEditDialogOpen && editingNote?._id === note._id}
                         onOpenChange={(open) => {
+                          // Only call handleEditDialogOpenChange if this specific dialog is being changed
                           if (editingNote?._id === note._id) {
-                            handleEditDialogOpenChange(open);
+                             handleEditDialogOpenChange(open);
                           }
                         }}
                       >
@@ -376,7 +394,8 @@ function HomePage() {
                             Edit
                           </Button>
                         </DialogTrigger>
-                        {editingNote && editingNote._id === note._id && (
+                        {/* Conditionally render DialogContent to ensure RichTextEditor gets correct key and initialContent */}
+                        {editingNote && editingNote._id === note._id && isEditDialogOpen && (
                           <DialogContent className="sm:max-w-[600px] md:max-w-[750px] lg:max-w-[800px] w-[95vw] [&>button]:hidden">
                             <DialogHeader>
                               <DialogTitle>Edit Note</DialogTitle>
@@ -399,28 +418,33 @@ function HomePage() {
                               />
                               <div className='w-full min-h-[200px] max-h-[60vh] border rounded-md overflow-y-auto'>
                                 <RichTextEditor
-                                  key={`edit-editor-${editingNote._id}`}
+                                  key={`edit-editor-${editingNote._id}`} // Crucial: re-mounts editor for new note
                                   ref={editEditorRef}
-                                  initialContent={editingNote.description}
+                                  initialContent={editingNote.description} // Set initial content for the editor
                                 />
                               </div>
                             </div>
                             <div className="flex justify-end gap-2 mt-4">
-                                  {/* Pass the note's description to GeminiSheet */}
-                                  <GeminiSheet initialEditorContent={editingNote.description} />
-                                  <DialogClose asChild>
-                                    <Button variant="outline" disabled={isUpdatingNote} className="cursor-pointer">Cancel</Button>
-                                  </DialogClose>
-                                  <Button
-                                    onClick={handleUpdateNote}
-                                    disabled={isUpdatingNote || handleEditDialogTitleInvalid()}
-                                    className="cursor-pointer"
-                                  >
-                                    {isUpdatingNote ? (
-                                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving Changes...</>
-                                    ) : ('Save Changes')}
-                                  </Button>
-                                </div>
+                                {/* MODIFIED: Pass the getter function for edit editor's content */}
+                                {/* The initialEditorContent prop is removed from here as GeminiSheet
+                                    will now use getEditorContent to fetch the latest.
+                                    If GeminiSheet also needs an initial seed that's different from live fetching,
+                                    you could add a separate prop for that.
+                                */}
+                              <GeminiSheet getEditorContent={getCurrentEditEditorContent} />
+                              <DialogClose asChild>
+                                <Button variant="outline" disabled={isUpdatingNote} className="cursor-pointer">Cancel</Button>
+                              </DialogClose>
+                              <Button
+                                onClick={handleUpdateNote}
+                                disabled={isUpdatingNote || handleEditDialogTitleInvalid()}
+                                className="cursor-pointer"
+                              >
+                                {isUpdatingNote ? (
+                                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving Changes...</>
+                                ) : ('Save Changes')}
+                              </Button>
+                            </div>
                           </DialogContent>
                         )}
                       </Dialog>
@@ -431,6 +455,7 @@ function HomePage() {
                             variant="destructive"
                             size="sm"
                             disabled={deletingNoteId === note._id}
+                            onClick={() => { /* Allow dialog to open */ }}
                             className="cursor-pointer px-2.5 md:px-3">
                             {deletingNoteId === note._id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />

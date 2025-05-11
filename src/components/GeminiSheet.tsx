@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useRef, useEffect, useMemo } from 'react'; // Added useMemo if you were to use marked, but not strictly needed for react-markdown directly here
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Sheet,
     SheetContent,
@@ -16,7 +16,6 @@ import { Terminal, Sparkles } from "lucide-react";
 import RichTextEditor, { EditorHandle } from '@/components/RichTextEditor';
 import { Editor } from '@tiptap/react';
 
-// Import ReactMarkdown and remarkGfm
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -25,9 +24,7 @@ interface ApiResponse {
     error?: string;
 }
 
-const generateResponse = async (prompt: string): Promise<string | null> => {
-    // ... (your existing generateResponse function)
-    // Ensure it returns the raw Markdown string from the API
+const generateResponseAPI = async (prompt: string): Promise<string | null> => {
     try {
         const response = await fetch('/api/generate', {
             method: 'POST',
@@ -36,7 +33,7 @@ const generateResponse = async (prompt: string): Promise<string | null> => {
         });
         const data: ApiResponse = await response.json();
         if (response.ok && data.output) {
-            return data.output; // This is expected to be Markdown
+            return data.output;
         } else {
             const errorMessage = data.error || `API Error: ${response.status} ${response.statusText}`;
             console.error("API Error:", errorMessage);
@@ -53,16 +50,17 @@ const generateResponse = async (prompt: string): Promise<string | null> => {
 
 interface GeminiSheetProps {
     initialEditorContent?: string;
-    getCurrentEditorContent?: () => string | undefined;
+    getEditorContent?: () => string | undefined; // MODIFIED: Changed prop name here
 }
 
-function GeminiSheet({ initialEditorContent }: GeminiSheetProps) {
-    const [aiMarkdownResponse, setAiMarkdownResponse] = useState<string>(""); // Changed state variable name
+function GeminiSheet({ initialEditorContent, getEditorContent }: GeminiSheetProps) { // MODIFIED: Changed prop name in destructuring
+    const [aiMarkdownResponse, setAiMarkdownResponse] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
     const [editorHasContent, setEditorHasContent] = useState<boolean>(false);
     const editorRef = useRef<EditorHandle>(null);
+    const [contentForEditor, setContentForEditor] = useState<string>('');
 
     useEffect(() => {
         if (editorRef.current?.setEditorEditable) {
@@ -72,20 +70,32 @@ function GeminiSheet({ initialEditorContent }: GeminiSheetProps) {
 
     useEffect(() => {
         if (isSheetOpen) {
-            if (initialEditorContent) {
-                const tempElement = document.createElement('div');
-                tempElement.innerHTML = initialEditorContent;
-                const text = (tempElement.textContent || tempElement.innerText || "").trim();
-                setEditorHasContent(text !== '');
-            } else {
-                setEditorHasContent(false);
+            let newContent = '';
+            // MODIFIED: Use the new prop name 'getEditorContent'
+            if (getEditorContent) {
+                const liveContent = getEditorContent();
+                if (liveContent !== undefined && liveContent.trim() !== '<p></p>' && liveContent.trim() !== '') {
+                    newContent = liveContent;
+                }
             }
-        }
-    }, [isSheetOpen, initialEditorContent]);
 
+            if (!newContent && initialEditorContent) {
+                newContent = initialEditorContent;
+            }
+            setContentForEditor(newContent);
+
+            const tempElement = document.createElement('div');
+            tempElement.innerHTML = newContent;
+            const text = (tempElement.textContent || tempElement.innerText || "").trim();
+            setEditorHasContent(text !== '');
+
+        }
+    }, [isSheetOpen, getEditorContent, initialEditorContent]); // MODIFIED: Dependency array updated
 
     const handleEditorUpdate = ({ editor }: { editor: Editor }) => {
-        setEditorHasContent(!editor.isEmpty && editor.getText().trim() !== '');
+        const currentContent = editor.getHTML();
+        const isEmptyHtml = currentContent.trim() === '<p></p>' || currentContent.trim() === '';
+        setEditorHasContent(!editor.isEmpty && !isEmptyHtml && editor.getText().trim() !== '');
     };
 
     const handleGenerateClick = async () => {
@@ -96,10 +106,9 @@ function GeminiSheet({ initialEditorContent }: GeminiSheetProps) {
         }
         setIsLoading(true);
         setError(null);
-        setAiMarkdownResponse(""); // Clear previous Markdown response
-
+        setAiMarkdownResponse("");
         try {
-            const output = await generateResponse(currentContentHtml); // output is Markdown
+            const output = await generateResponseAPI(currentContentHtml);
             if (output) {
                 setAiMarkdownResponse(output);
             } else {
@@ -119,7 +128,7 @@ function GeminiSheet({ initialEditorContent }: GeminiSheetProps) {
     const handleSheetOpenChange = (open: boolean) => {
         setIsSheetOpen(open);
         if (open) {
-            setAiMarkdownResponse(""); // Clear Markdown response when opening
+            setAiMarkdownResponse("");
             setError(null);
         }
     };
@@ -139,23 +148,18 @@ function GeminiSheet({ initialEditorContent }: GeminiSheetProps) {
                             Type or paste your notes below. Gemini can help reword, summarize, or answer questions.
                         </SheetDescription>
                     </SheetHeader>
-
                     <div className="flex-grow flex flex-col gap-4 py-3 min-h-0">
-                        <div className="flex-shrink-0 h-48 flex flex-col"> {/* Define a height and make it a flex column */}
-                            <ScrollArea className="flex-grow min-h-50 border rounded-md"> {/* ScrollArea fills this fixed height */}
+                        <div className="flex-shrink-0 h-48 flex flex-col">
+                            <ScrollArea className="flex-grow min-h-50 border rounded-md">
                                 <RichTextEditor
                                     ref={editorRef}
-                                    key={`${isSheetOpen}-${initialEditorContent || 'empty'}`}
-                                    initialContent={initialEditorContent || ''}
+                                    key={`gemini-editor-${isSheetOpen}-${contentForEditor.substring(0, 20)}`}
+                                    initialContent={contentForEditor}
                                     onUpdate={handleEditorUpdate}
                                     showMenuBar={false}
-                                    // Ensure RichTextEditor itself doesn't have conflicting height styles
-                                    // that would prevent ScrollArea from working. It should be allowed
-                                    // to naturally expand its content.
                                 />
                             </ScrollArea>
                         </div>
-
                         {error && (
                             <Alert variant="destructive" className="flex-shrink-0">
                                 <Terminal className="h-4 w-4" />
@@ -163,23 +167,18 @@ function GeminiSheet({ initialEditorContent }: GeminiSheetProps) {
                                 <AlertDescription>{error}</AlertDescription>
                             </Alert>
                         )}
-
-                        {/* Updated AI Response display area */}
                         {aiMarkdownResponse && !error && (
-                                // This container already has flex-grow. Make it a flex column.
-                                <div className="flex-grow p-3 border rounded-md bg-muted min-h-0 flex flex-col">
-                                    <h3 className="font-semibold mb-2 text-sm">Gemini's Response:</h3>
-                                    {/* Let ScrollArea grow to fill the remaining space in this flex column */}
-                                    <ScrollArea className="flex-grow min-h-0">
-                                        <div className="prose prose-sm dark:prose-invert max-w-none">
-                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                {aiMarkdownResponse}
-                                            </ReactMarkdown>
-                                        </div>
-                                    </ScrollArea>
-                                </div>
-                            )}
-
+                            <div className="flex-grow p-3 border rounded-md bg-muted min-h-0 flex flex-col">
+                                <h3 className="font-semibold mb-2 text-sm">Gemini's Response:</h3>
+                                <ScrollArea className="flex-grow min-h-0">
+                                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {aiMarkdownResponse}
+                                        </ReactMarkdown>
+                                    </div>
+                                </ScrollArea>
+                            </div>
+                        )}
                         {isLoading && (
                             <div className="flex-grow flex items-center justify-center text-muted-foreground">
                                 <p>Generating response...</p>
@@ -191,7 +190,6 @@ function GeminiSheet({ initialEditorContent }: GeminiSheetProps) {
                             </div>
                         )}
                     </div>
-
                     <SheetFooter className="mt-auto pt-4 border-t">
                         <Button
                             onClick={handleGenerateClick}
