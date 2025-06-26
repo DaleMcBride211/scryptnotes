@@ -17,7 +17,7 @@ function Header() {
                 boxShadow: shadow, // Make sure 'shadow' is a valid CSS box-shadow string
             }}>
             <Link href="/" className="flex items-end gap-2">
-                <Image src="/scryptlogocopy.png" alt='Scrypt Notes Logo' height={60} width={60} className="rounded-full" priority />
+                <Image src="/scryptlogo.png" alt='Scrypt Notes Logo' height={60} width={60} className="rounded-full" priority />
                 <h1 className='flex flex-col pb-1 text-2xl font-semibold leading-6'> {/* Corrected font-semibold */}
                     Scrypt <span>Notes</span>
                 </h1>
