@@ -50,10 +50,10 @@ const generateResponseAPI = async (prompt: string): Promise<string | null> => {
 
 interface GeminiSheetProps {
     initialEditorContent?: string;
-    getEditorContent?: () => string | undefined; // MODIFIED: Changed prop name here
+    getEditorContent?: () => string | undefined; 
 }
 
-function GeminiSheet({ initialEditorContent, getEditorContent }: GeminiSheetProps) { // MODIFIED: Changed prop name in destructuring
+function GeminiSheet({ initialEditorContent, getEditorContent }: GeminiSheetProps) { 
     const [aiMarkdownResponse, setAiMarkdownResponse] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,7 @@ function GeminiSheet({ initialEditorContent, getEditorContent }: GeminiSheetProp
     useEffect(() => {
         if (isSheetOpen) {
             let newContent = '';
-            // MODIFIED: Use the new prop name 'getEditorContent'
+           
             if (getEditorContent) {
                 const liveContent = getEditorContent();
                 if (liveContent !== undefined && liveContent.trim() !== '<p></p>' && liveContent.trim() !== '') {
@@ -90,7 +90,7 @@ function GeminiSheet({ initialEditorContent, getEditorContent }: GeminiSheetProp
             setEditorHasContent(text !== '');
 
         }
-    }, [isSheetOpen, getEditorContent, initialEditorContent]); // MODIFIED: Dependency array updated
+    }, [isSheetOpen, getEditorContent, initialEditorContent]); 
 
     const handleEditorUpdate = ({ editor }: { editor: Editor }) => {
         const currentContent = editor.getHTML();

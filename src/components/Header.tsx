@@ -1,9 +1,9 @@
 'use client'
-import React from 'react' // Added useState
+import React from 'react' 
 import Link from 'next/link';
 import Image from 'next/image';
-import { shadow } from '@/styles/utils'; // Assuming this is correctly defined
-import DarkModeToggle from './DarkModeToggle'; // Assuming this component exists
+import { shadow } from '@/styles/utils'; 
+import DarkModeToggle from './DarkModeToggle'; 
 import GeminiSheet from '@/components/GeminiSheet'
 
 
@@ -12,9 +12,9 @@ function Header() {
 
     return (
         <header
-            className='absolute flex h-24 w-full items-center justify-between bg-popover px-2 z-10 sm:min-w-[400px]' // z-10 to be above other content
+            className='absolute flex h-24 w-full items-center justify-between bg-popover px-2 z-10 sm:min-w-[400px]'
             style={{
-                boxShadow: shadow, // Make sure 'shadow' is a valid CSS box-shadow string
+                boxShadow: shadow, 
             }}>
             <Link href="/" className="flex items-end gap-2">
                 <Image src="/scryptlogo.png" alt='Scrypt Notes Logo' height={60} width={60} className="rounded-full" priority />

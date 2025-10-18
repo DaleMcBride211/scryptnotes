@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import RichTextEditor, { EditorHandle } from '@/components/RichTextEditor';
-import GeminiSheet from '@/components/GeminiSheet'; // Assuming GeminiSheet will be adapted
+import GeminiSheet from '@/components/GeminiSheet'; 
 
 interface Note {
   _id: string;
@@ -224,7 +224,7 @@ function HomePage() {
       await updateNoteAPI(editingNote._id, editNoteTitle, description);
       setIsUpdatingNote(false);
       setIsEditDialogOpen(false);
-      setEditingNote(null); // Clear editingNote after successful update
+      setEditingNote(null); 
       await fetchAndSetNotes();
     } catch (err) {
       setEditError(err instanceof Error ? err.message : "An unknown error occurred while updating.");
@@ -314,9 +314,9 @@ function HomePage() {
                 />
                 <div className='w-full min-h-[200px] max-h-[60vh] border rounded-md overflow-y-auto'>
                   <RichTextEditor
-                    key={`create-editor-${isCreateDialogOpen}`} // Ensures editor can be reset if needed
+                    key={`create-editor-${isCreateDialogOpen}`} 
                     ref={createEditorRef}
-                    // initialContent="" // Cleared by clearEditorContent on dialog open
+                    
                   />
                 </div>
               </div>
@@ -338,11 +338,7 @@ function HomePage() {
             </DialogContent>
           </Dialog>
         </div>
-        <div className="text-sm text-gray-500 mt-4 md:mt-6 hidden md:block">
-          Tags (Placeholder)
-        </div>
       </div>
-
       {/* Main Content Column */}
       <div className="flex-grow p-3 md:p-6 lg:p-8 overflow-y-auto">
         {isRefreshing && (
